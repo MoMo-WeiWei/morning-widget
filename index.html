@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>晨間能量與冥想橫長條小工具（清晰放大版）</title>
+  <title>晨間能量與冥想橫長條小工具（特大清晰版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,31 +13,32 @@
       font-family: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: transparent;
       margin: 0;
-      padding: 8px;
-      overflow-x: hidden;
+      padding: 6px;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .widget-banner {
       background-color: #FAF9F6;
       border: 1px solid #E5E0D8;
-      box-shadow: 0 8px 24px -8px rgba(74, 70, 62, 0.08);
+      box-shadow: 0 6px 20px -4px rgba(74, 70, 62, 0.08);
     }
 
     .quote-fade {
-      transition: opacity 0.25s ease, transform 0.25s ease;
+      transition: opacity 0.2s ease, transform 0.2s ease;
     }
     .quote-fade-out {
       opacity: 0;
-      transform: translateY(3px);
+      transform: translateY(2px);
     }
 
     @keyframes wavePulse {
-      0%, 100% { height: 6px; }
-      50% { height: 18px; }
+      0%, 100% { height: 7px; }
+      50% { height: 22px; }
     }
     .sound-bar {
-      width: 3.5px;
-      height: 6px;
+      width: 4px;
+      height: 7px;
       background-color: #6B8E78;
       border-radius: 9999px;
       transition: height 0.2s ease;
@@ -54,92 +55,40 @@
       cursor: pointer;
     }
     input[type="range"]::-webkit-slider-runnable-track {
-      height: 6px;
+      height: 7px;
       border-radius: 999px;
       background: #E5E0D8;
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 15px;
-      height: 15px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       background: #6B8E78;
-      margin-top: -4.5px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-      transition: transform 0.15s ease;
-    }
-    input[type="range"]::-webkit-slider-thumb:hover {
-      transform: scale(1.15);
+      margin-top: -5.5px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
     }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center">
+<body>
 
-  <!-- 清晰放大版橫長條小工具容器 -->
-  <div class="widget-banner w-full max-w-5xl rounded-2xl px-5 py-4 md:px-7 md:py-5 text-[#4A463E] transition-all">
-    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6">
+  <!-- 特大清晰版橫長條小工具主體 -->
+  <div class="widget-banner w-full rounded-2xl px-5 py-6 md:px-8 md:py-7 text-[#4A463E]">
+    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 md:gap-7">
       
-      <!-- 左側區域：分類切換與金句展示 (約佔 65%) -->
-      <div class="flex-1 min-w-0 flex flex-col justify-between gap-3">
-        <!-- 頂部控制列：分類膠囊 + 換一句 -->
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2" role="tablist" aria-label="金句心情分類">
+      <!-- 左側：分類與金句 -->
+      <div class="flex-1 min-w-0 flex flex-col justify-between gap-4">
+        <div class="flex flex-wrap items-center justify-between gap-2.5">
+          <div class="flex flex-wrap items-center gap-2" role="tablist">
             <button
               id="tab-inspire"
               onclick="selectCategory('inspire')"
-              class="cat-btn px-3.5 py-1.5 rounded-full text-sm font-medium transition-all bg-[#6B8E78] text-white shadow-sm"
+              class="cat-btn px-4 py-2 rounded-full text-sm md:text-[15px] font-semibold transition-all bg-[#6B8E78] text-white shadow-sm"
             >
               ✨ 勵志充能
             </button>
             <button
               id="tab-funny"
               onclick="selectCategory('funny')"
-              class="cat-btn px-3.5 py-1.5 rounded-full text-sm font-medium transition-all bg-[#F0EDE6] text-[#7D776C] hover:bg-[#E6E1D6]"
-            >
-              😂 輕鬆搞笑
-            </button>
-            <button
-              id="tab-calm"
-              onclick="selectCategory('calm')"
-              class="cat-btn px-3.5 py-1.5 rounded-full text-sm font-medium transition-all bg-[#F0EDE6] text-[#7D776C] hover:bg-[#E6E1D6]"
-            >
-              🌿 心靈安撫
-            </button>
-          </div>
-
-          <button
-            onclick="nextQuote()"
-            title="換一句"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-[#6B8E78] bg-[#6B8E78]/10 hover:bg-[#6B8E78]/20 active:scale-95 transition-all"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-              <path d="M3 3v5h5"/>
-              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
-              <path d="M16 16h5v5"/>
-            </svg>
-            <span>換一句</span>
-          </button>
-        </div>
-
-        <!-- 放大清晰金句本文 -->
-        <div class="bg-[#F4F1EA]/80 border border-[#EAE5DC] rounded-xl px-4 py-3.5 min-h-[68px] flex items-center">
-          <p id="quote-text" class="quote-fade text-lg md:text-[19px] font-medium leading-relaxed text-[#3E3A33] tracking-wide">
-            今天的你，不需要一下子走完所有路，只要先踏出第一步就夠棒了。
-          </p>
-        </div>
-      </div>
-
-      <!-- 中間分隔線 -->
-      <div class="hidden md:block w-[1px] self-stretch bg-[#E5E0D8]"></div>
-      <div class="block md:hidden h-[1px] w-full bg-[#E5E0D8]"></div>
-
-      <!-- 右側區域：冥想純音播放器 (約佔 35%) -->
-      <div class="w-full md:w-[300px] shrink-0 flex flex-col justify-between gap-3">
-        <!-- 音景選擇按鈕 -->
-        <div class="flex items-center justify-between gap-1.5 bg-[#F0EDE6] p-1.5 rounded-xl">
-          <button
-            id="sound-bowl"
-            onclick="selectSound('bowl')"
-            class="sound-btn flex-1 py-1.5 px-2 rounded-lg text-xs
+              class="cat-btn px-4 py-2 rounded-full text-sm md:text-[15
