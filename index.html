@@ -74,3 +74,263 @@
 <body>
 
   <div class="widget-banner w-full rounded-2xl px-5 py-6 md:px-8 md:py-7 text-[#4A463E]">
+    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 md:gap-7">
+      
+      <!-- 左側：分類與金句 -->
+      <div class="flex-1 min-w-0 flex flex-col justify-between gap-4">
+        <div class="flex flex-wrap items-center justify-between gap-2.5">
+          <div class="flex flex-wrap items-center gap-2" role="tablist">
+            <button id="tab-inspire" onclick="selectCategory('inspire')" class="cat-btn px-4 py-2 rounded-full text-sm md:text-[15px] font-semibold transition-all bg-[#6B8E78] text-white shadow-sm">
+              ✨ 勵志充能
+            </button>
+            <button id="tab-funny" onclick="selectCategory('funny')" class="cat-btn px-4 py-2 rounded-full text-sm md:text-[15px] font-semibold transition-all bg-[#F0EDE6] text-[#7D776C]">
+              😂 輕鬆搞笑
+            </button>
+            <button id="tab-calm" onclick="selectCategory('calm')" class="cat-btn px-4 py-2 rounded-full text-sm md:text-[15px] font-semibold transition-all bg-[#F0EDE6] text-[#7D776C]">
+              🌿 心靈安撫
+            </button>
+          </div>
+
+          <button onclick="nextQuote()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm md:text-[15px] font-semibold text-[#6B8E78] bg-[#6B8E78]/10 active:scale-95 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>
+            </svg>
+            <span>換一句</span>
+          </button>
+        </div>
+
+        <div class="bg-[#F4F1EA] border border-[#EAE5DC] rounded-2xl px-5 py-5 min-h-[92px] flex items-center">
+          <p id="quote-text" class="quote-fade text-[20px] md:text-[22px] font-medium leading-relaxed text-[#3E3A33] tracking-wide">
+            今天的你，不需要一下子走完所有路，只要先踏出第一步就夠棒了。
+          </p>
+        </div>
+      </div>
+
+      <!-- 分隔線 -->
+      <div class="hidden md:block w-[1px] self-stretch bg-[#E5E0D8]"></div>
+      <div class="block md:hidden h-[1px] w-full bg-[#E5E0D8]"></div>
+
+      <!-- 右側：音樂播放器 -->
+      <div class="w-full md:w-[320px] shrink-0 flex flex-col justify-between gap-3.5">
+        <div class="flex items-center justify-between gap-1.5 bg-[#F0EDE6] p-1.5 rounded-xl">
+          <button id="sound-bowl" onclick="selectSound('bowl')" class="sound-btn flex-1 py-2 px-2 rounded-lg text-sm font-semibold transition-all bg-white text-[#4A463E] shadow-sm">🔔 頌缽</button>
+          <button id="sound-breeze" onclick="selectSound('breeze')" class="sound-btn flex-1 py-2 px-2 rounded-lg text-sm font-semibold transition-all text-[#7D776C]">🍃 微風</button>
+          <button id="sound-forest" onclick="selectSound('forest')" class="sound-btn flex-1 py-2 px-2 rounded-lg text-sm font-semibold transition-all text-[#7D776C]">🌲 森林</button>
+        </div>
+
+        <div class="flex items-center justify-between gap-3 bg-[#F4F1EA] border border-[#EAE5DC] rounded-2xl px-4 py-3.5">
+          <div class="flex items-center gap-3">
+            <button id="play-btn" onclick="togglePlay()" class="w-12 h-12 rounded-full bg-[#6B8E78] active:scale-95 text-white flex items-center justify-center shadow-sm shrink-0">
+              <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <svg id="icon-pause" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hidden" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+              </svg>
+            </button>
+            <div class="flex flex-col">
+              <span id="audio-status" class="text-sm font-medium text-[#7D776C]">點擊播放純音</span>
+              <div id="wave-container" class="flex items-end gap-1.5 h-5 mt-1">
+                <span class="sound-bar"></span><span class="sound-bar"></span><span class="sound-bar"></span><span class="sound-bar"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 w-24">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#8C857B] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <input id="volume-slider" type="range" min="0" max="1" step="0.05" value="0.5" oninput="updateVolume(this.value)" class="w-full" />
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const quotesData = {
+      inspire: [
+        "今天的你，不需要一下子走完所有路，只要先踏出第一步就夠棒了。",
+        "每一個微小的累積，都在替未來的你鋪一條更輕鬆的路。",
+        "專注在今天能完成的一件小事上，你的節奏就是最好的節奏。",
+        "陽光每天都會重新升起，你也可以隨時為自己按下重新開始鍵。",
+        "別小看自己每天一點點的堅持，時間會給你最溫柔的回報。"
+      ],
+      funny: [
+        "早安！只要我賴床的速度夠快，煩惱就追不上我……好吧還是起床吧。",
+        "今天的工作目標：先喝一口水，假裝自己是個情緒穩定的大人。",
+        "別擔心今天會不會搞砸，反正明天還有明天的事情可以搞砸。",
+        "起床的第一步：打開眼睛；第二步：思考人生；第三步：算了先去吃早餐。",
+        "如果今天覺得很累，記住：連仙人掌都不用每天澆水，你偶爾擺爛一下很合理。"
+      ],
+      calm: [
+        "深呼吸，把肩膀放下來。今天就算只完成 60 分，也已經很足夠了。",
+        "先照顧好自己的心情，再去照顧待辦清單上的事情。",
+        "你不需要時時刻刻都充滿幹勁，累的時候安靜休息一會兒也沒關係。",
+        "給自己三分鐘的空白，聽聽呼吸的聲音，讓心慢慢安靜下來。",
+        "不管昨天發生了什麼，今天是一個乾淨、全新的早晨。"
+      ]
+    };
+
+    let currentCategory = 'inspire';
+    let lastQuoteIndex = 0;
+
+    function selectCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.classList.remove('bg-[#6B8E78]', 'text-white', 'shadow-sm');
+        btn.classList.add('bg-[#F0EDE6]', 'text-[#7D776C]');
+      });
+      const activeBtn = document.getElementById(`tab-${cat}`);
+      activeBtn.classList.remove('bg-[#F0EDE6]', 'text-[#7D776C]');
+      activeBtn.classList.add('bg-[#6B8E78]', 'text-white', 'shadow-sm');
+      nextQuote(true);
+    }
+
+    function nextQuote(reset = false) {
+      const list = quotesData[currentCategory];
+      const textEl = document.getElementById('quote-text');
+      let newIndex;
+      if (reset) {
+        newIndex = Math.floor(Math.random() * list.length);
+      } else {
+        do {
+          newIndex = Math.floor(Math.random() * list.length);
+        } while (newIndex === lastQuoteIndex && list.length > 1);
+      }
+      lastQuoteIndex = newIndex;
+      textEl.classList.add('quote-fade-out');
+      setTimeout(() => {
+        textEl.textContent = list[newIndex];
+        textEl.classList.remove('quote-fade-out');
+      }, 150);
+    }
+
+    let audioCtx = null;
+    let isPlaying = false;
+    let currentSound = 'bowl';
+    let masterGain = null;
+    let activeNodes = [];
+    let bowlInterval = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = document.getElementById('volume-slider').value;
+        masterGain.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function stopAllSounds() {
+      if (bowlInterval) { clearInterval(bowlInterval); bowlInterval = null; }
+      activeNodes.forEach(node => {
+        try { if (node.stop) node.stop(); if (node.disconnect) node.disconnect(); } catch (e) {}
+      });
+      activeNodes = [];
+    }
+
+    function triggerBowlStrike() {
+      if (!audioCtx || !isPlaying) return;
+      const now = audioCtx.currentTime;
+      [256, 512, 768].forEach((f, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, now);
+        const peak = idx === 0 ? 0.25 : (idx === 1 ? 0.1 : 0.04);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(peak, now + 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 5.5);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 5.6);
+        activeNodes.push(osc, gain);
+      });
+    }
+
+    function startSoundscape(type) {
+      initAudio();
+      stopAllSounds();
+      if (type === 'bowl') {
+        triggerBowlStrike();
+        bowlInterval = setInterval(triggerBowlStrike, 6000);
+      } else {
+        const bufferSize = 2 * audioCtx.sampleRate;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        let lastOut = 0.0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          output[i] = (lastOut + (0.02 * white)) / 1.02;
+          lastOut = output[i];
+          output[i] *= 3.5;
+        }
+        const whiteNoise = audioCtx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = type === 'breeze' ? 320 : 650;
+        const envGain = audioCtx.createGain();
+        envGain.gain.value = type === 'breeze' ? 0.35 : 0.25;
+        whiteNoise.connect(filter);
+        filter.connect(envGain);
+        envGain.connect(masterGain);
+        whiteNoise.start(0);
+        activeNodes.push(whiteNoise, filter, envGain);
+      }
+    }
+
+    function togglePlay() {
+      const playIcon = document.getElementById('icon-play');
+      const pauseIcon = document.getElementById('icon-pause');
+      const waveContainer = document.getElementById('wave-container');
+      const statusText = document.getElementById('audio-status');
+
+      if (!isPlaying) {
+        isPlaying = true;
+        startSoundscape(currentSound);
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+        waveContainer.classList.add('playing');
+        statusText.textContent = '播放中...';
+      } else {
+        isPlaying = false;
+        stopAllSounds();
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+        waveContainer.classList.remove('playing');
+        statusText.textContent = '已暫停';
+      }
+    }
+
+    function selectSound(sound) {
+      currentSound = sound;
+      document.querySelectorAll('.sound-btn').forEach(btn => {
+        btn.classList.remove('bg-white', 'text-[#4A463E]', 'shadow-sm');
+        btn.classList.add('text-[#7D776C]');
+      });
+      const activeBtn = document.getElementById(`sound-${sound}`);
+      activeBtn.classList.remove('text-[#7D776C]');
+      activeBtn.classList.add('bg-white', 'text-[#4A463E]', 'shadow-sm');
+      if (isPlaying) { startSoundscape(currentSound); }
+    }
+
+    function updateVolume(val) {
+      if (masterGain && audioCtx) {
+        masterGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.05);
+      }
+    }
+  </script>
+</body>
+</html>
