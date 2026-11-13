@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>晨間能量與冥想橫長條小工具</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 Noto Sans TC 與 Inter 字體，提升繁體中文閱讀質感 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #EFECE6; /* 展示畫布背景，實際嵌入時可視需求設為 transparent */
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    /* 小工具橫條主體配色與質感 */
+    .widget-banner {
+      background-color: #FAF9F6;
+      border: 1px solid #E5E0D8;
+      box-shadow: 0 8px 24px -8px rgba(74, 70, 62, 0.08);
+    }
+
+    /* 金句切換淡入淡出過渡效果 */
+    .quote-fade {
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .quote-fade-out {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+    .quote-fade-in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 音波跳動動畫 */
+    @keyframes wavePulse {
+      0%, 100% { height: 4px; }
+      50% { height: 13px; }
+    }
+    .wave-bar {
+      width: 2.5px;
+      height: 4px;
+      border-radius: 9999px;
+      background-color: #6B8E78;
+      transition: height 0.2s ease;
+    }
+    .playing .wave-bar:nth-child(1) { animation: wavePulse 1.1s ease-in-out infinite 0.0s; }
+    .playing .wave-bar:nth-child(2) { animation: wavePulse 0.9s ease-in-out infinite 0.2s; }
+    .playing .wave-bar:nth-child(3) { animation: wavePulse 1.2s ease-in-out infinite 0.4s; }
+    .playing .wave-bar:nth-child(4) { animation: wavePulse 1.0s ease-in-out infinite 0.15s; }
+
+    /* 自訂極簡音量滑桿樣式 */
+    input[type="range"].sage-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"].sage-slider::-webkit-slider-runnable-track {
+      height: 4px;
+      border-radius: 9999px;
+      background: #E2DDD3;
+    }
+    input[type="range"].sage-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #6B8E78;
+      margin-top: -3.5px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+    input[type="range"].sage-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.18);
+      background: #577863;
+    }
+    input[type="range"].sage-slider::-moz-range-track {
+      height: 4px;
+      border-radius: 9999px;
+      background: #E2DDD3;
+    }
+    input[type="range"].sage-slider::-moz-range-thumb {
+      width: 11px;
+      height: 11px;
+      border: none;
+      border-radius: 50%;
+      background: #6B8E78;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body class="min-h-screen w-full flex items-center justify-center p-3 sm:p-6">
+
+  <!-- 橫長條小工具容器：自適應 100% 寬度，緊湊高度約 116px~136px -->
+  <section
+    aria-label="晨間能量與冥想橫長條小工具"
+    class="widget-banner w-full max-w-5xl rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-[#3D3A35] select-none flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4"
+  >
+    <!-- 左側區域（約佔 65% 寬度）：心情分類膠囊 + 打氣金句 + 換一句按鈕 -->
+    <div class="w-full md:w-[65%] flex flex-col justify-between gap-2 min-w-0">
+      <!-- 頂部控制列：問候標籤 + 分類切換膠囊 + 換一句按鈕 -->
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-medium text-[#8C8478] shrink-0">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#7C9A82]"></span>
+            今日補給
+          </span>
+
+          <!-- 分類切換膠囊 -->
+          <div
+            role="tablist"
+            aria-label="金句心情分類"
+            class="inline-flex items-center gap-0.5 bg-[#F1EDE4] p-0.5 rounded-lg border border-[#E7E1D6]"
+          >
+            <button
+              type="button"
+              role="tab"
+              data-category="inspire"
+              aria-selected="true"
+              class="cat-btn active text-[11px] font-medium py-1 px-2 rounded-md transition-all duration-150 bg-white text-[#4A6654] shadow-xs cursor-pointer whitespace-nowrap"
+            >
+              ✨ 勵志充能
+            </button>
+            <button
+              type="button"
+              role="tab"
+              data-category="funny"
+              aria-selected="false"
+              class="cat-btn text-[11px] font-medium py-1 px-2 rounded-md transition-all duration-150 text-[#7A7368] hover:text-[#3D3A35] cursor-pointer whitespace-nowrap"
+            >
+              😂 輕鬆搞笑
+            </button>
+            <button
+              type="button"
+              role="tab"
+              data-category="soothe"
+              aria-selected="false"
+              class="cat-btn text-[11px] font-medium py-1 px-2 rounded-md transition-all duration-150 text-[#7A7368] hover:text-[#3D3A35] cursor-pointer whitespace-nowrap"
+            >
+              🌿 心靈安撫
+            </button>
+          </div>
+        </div>
+
+        <!-- 換一句刷新按鈕 -->
+        <button
+          type="button"
+          id="nextQuoteBtn"
+          title="抽取下一句"
+          class="group inline-flex items-center gap-1 text-[11px] font-medium text-[#5B7A66] hover:text-[#3F5949] bg-[#F3F6F4] hover:bg-[#E6EDE8] active:scale-95 px-2.5 py-1 rounded-lg transition-all duration-150 cursor-pointer shrink-0"
+        >
+          <svg
+            id="refreshIcon"
+            class="w-3 h-3 transition-transform duration-300"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+            <path d="M16 16h5v5" />
+          </svg>
+          <span>換一句</span>
+        </button>
+      </div>
+
+      <!-- 金句展示區 -->
+      <div class="bg-white/80 border border-[#ECE7DD] rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 min-h-[54px]">
+        <span class="text-[#CFC7B9] text-xl font-serif leading-none select-none shrink-0">“</span>
+        <div id="quoteContainer" class="quote-fade quote-fade-in flex-1 min-w-0 flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-3">
+          <p id="quoteText" class="text-[13px] leading-[1.55] font-medium text-[#36332E] tracking-wide">
+            載入今日金句中...
+          </p>
+          <span id="quoteSub" class="text-[10.5px] text-[#8F877B] shrink-0">
+            — 給今天的自己
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 中間細緻分隔線（桌面橫向時為垂直線，窄版折疊時為水平細線） -->
+    <div class="hidden md:block w-px self-stretch bg-[#E5E0D8] my-0.5 shrink-0" aria-hidden="true"></div>
+    <div class="block md:hidden h-px w-full bg-[#E5E0D8]" aria-hidden="true"></div>
+
+    <!-- 右側區域（約佔 35% 寬度）：精巧橫向 Web Audio API 冥想音景播放器 -->
+    <div
+      aria-label="早起冥想純音樂播放器"
+      class="w-full md:w-[35%] bg-[#F3EFE6]/90 border border-[#E6E0D4] rounded-xl px-3 py-2.5 flex flex-col justify-between gap-2 shrink-0"
+    >
+      <!-- 上排：圓形播放鍵 + 音景名稱/狀態 + 動態音波條 -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <!-- 圓形播放/暫停按鈕 -->
+          <button
+            type="button"
+            id="playPauseBtn"
+            aria-label="播放或暫停冥想音樂"
+            class="w-8 h-8 shrink-0 rounded-full bg-[#6B8E78] hover:bg-[#5A7B66] active:scale-95 text-white flex items-center justify-center shadow-xs transition-all duration-150 cursor-pointer"
+          >
+            <svg id="playIcon" class="w-3.5 h-3.5 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="6 4 20 12 6 20 6 4"></polygon>
+            </svg>
+            <svg id="pauseIcon" class="w-3.5 h-3.5 hidden" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+              <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+            </svg>
+          </button>
+
+          <!-- 當前音景資訊 -->
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span id="currentSoundTitle" class="text-[12px] font-semibold text-[#3A3732] truncate">
+                晨光頌缽
+              </span>
+            </div>
+            <p id="playerStatusText" class="text-[10px] text-[#847C70] truncate">
+              432Hz 溫暖泛音・喚醒平靜
+            </p>
+          </div>
+        </div>
+
+        <!-- 動態音波視覺條 -->
+        <div id="soundWave" class="flex items-center gap-[2px] h-3.5 px-1 shrink-0" aria-hidden="true">
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+        </div>
+      </div>
+
+      <!-- 下排：音軌切換鈕 + 精巧音量滑桿 -->
+      <div class="flex items-center justify-between gap-2">
+        <!-- 音景模式選擇器 -->
+        <div class="grid grid-cols-3 gap-0.5 bg-[#EAE4D7] p-0.5 rounded-lg flex-1 min-w-0">
+          <button
+            type="button"
+            data-sound="bowl"
+            class="sound-mode-btn active text-[10px] font-medium py-1 px-1 rounded-md bg-white text-[#4A6654] shadow-2xs transition-all truncate cursor-pointer"
+          >
+            晨光頌缽
+          </button>
+          <button
+            type="button"
+            data-sound="breeze"
+            class="sound-mode-btn text-[10px] font-medium py-1 px-1 rounded-md text-[#787065] hover:text-[#3D3A35] transition-all truncate cursor-pointer"
+          >
+            靜謐微風
+          </button>
+          <button
+            type="button"
+            data-sound="rain"
+            class="sound-mode-btn text-[10px] font-medium py-1 px-1 rounded-md text-[#787065] hover:text-[#3D3A35] transition-all truncate cursor-pointer"
+          >
+            森林白噪
+          </button>
+        </div>
+
+        <!-- 精巧音量滑桿 -->
+        <div class="flex items-center gap-1.5 w-[78px] sm:w-[86px] shrink-0">
+          <svg class="w-3 h-3 text-[#847C70] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <input
+            id="volumeSlider"
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value="0.55"
+            aria-label="冥想音樂音量"
+            class="sage-slider w-full h-3"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    /**
+     * ============================================================================
+     * 1. 晨間打氣金句資料庫與切換邏輯 (每類內建 8 句不重複短句)
+     * ============================================================================
+     */
+    const QUOTES_DATA = {
+      inspire: {
+        label: "勵志充能",
+        quotes: [
+          { text: "清晨的第一道光，是專屬於你的全新起跑線。今天也按自己的步調發光吧！", sub: "今日能量已滿格" },
+          { text: "不必一次把整座山搬走，只要專注把手邊這顆小石頭放對位置就夠了。", sub: "致專注當下的你" },
+          { text: "你比自己想像得更有韌性。那些走過的路，都會變成今天底氣的一部分。", sub: "相信自己的累積" },
+          { text: "把待辦清單上的第一件事完成，你就已經贏過昨天還在猶豫的自己了。", sub: "行動是最好的解藥" },
+          { text: "種一棵樹最好的時間是十年前，其次就是現在。深呼吸，開始今天的創造吧！", sub: "晨間啟動儀式" },
+          { text: "不用等到萬事俱備才出發，在路上的每一步，風景都會為你讓路。", sub: "勇敢邁出第一步" },
+          { text: "今天的努力不是為了取悅誰，而是為了讓未來的自己多一點選擇的自由。", sub: "給未來的禮物" },
+          { text: "保持微小的進步，時間會替你把看似平凡的日常，釀成驚喜的成果。", sub: "複利的力量" }
+        ]
+      },
+      funny: {
+        label: "輕鬆搞笑",
+        quotes: [
+          { text: "早起真的需要勇氣，而我今天竟然成功戰勝了地心引力，簡直是體壇奇蹟！", sub: "頒發今日最佳起床獎" },
+          { text: "先別急著改變世界，我們先去泡杯咖啡，把靈魂從被窩裡下載回來再說。", sub: "系統開機載入中" },
+          { text: "生活就像待辦清單，劃掉一項又冒出兩項——沒關係，至少我們打勾的姿勢很帥。", sub: "幽默面對每一天" },
+          { text: "如果早起能讓人變有錢，那鬧鐘應該要直接綁定我的銀行帳戶才對。", sub: "來自打工人心聲" },
+          { text: "今天也要加油鴨！就算只是在池塘裡優雅地划水，水底下也是有在努力踢腳的。", sub: "表面從容內心充實" },
+          { text: "別對自己太嚴格了，連手機電量低於 20% 都知道要開省電模式，你也可以！", sub: "適時開啟低耗電" },
+          { text: "世上無難事，只要肯放棄——開玩笑的，我們先做最簡單的那一項熱身就好！", sub: "先挑軟柿子吃" },
+          { text: "早上照鏡子覺得自己有點好看，看來今天又是充滿希望（與自信）的一天呢。", sub: "顏值即正義" }
+        ]
+      },
+      soothe: {
+        label: "心靈安撫",
+        quotes: [
+          { text: "允許自己今天慢一點也沒關係。雲朵從不趕時間，依然能飄向想去的地方。", sub: "給緊繃的心鬆綁" },
+          { text: "深吸一口氣，把肩膀放下來。你不需要隨時都完美，只要好好照顧自己就很好了。", sub: "溫柔對待自己" },
+          { text: "如果今天能量只有 40%，那就全心全意地付出這 40%，這已經是你的 100% 了。", sub: "接納當下的狀態" },
+          { text: "疲憊的時候，記得把世界調成靜音，留十分鐘給窗外的風與手裡的溫水。", sub: "片刻的留白" },
+          { text: "所有的焦慮多半來自對明天的預支，把心收回此刻的呼吸裡，你現在很安全。", sub: "回到此時此刻" },
+          { text: "做不完的事明天還有太陽會照亮，今晚之前，請務必留一點溫柔給自己。", sub: "不疾不徐的節奏" },
+          { text: "就像植物需要陽光也需要夜晚的露水，休息不是偷懶，而是為了下一次綻放。", sub: "允許自己休憩" },
+          { text: "無論昨天經歷了什麼，清晨的風都已經幫你把塵埃輕輕拂去了。", sub: "重新出發的溫柔" }
+        ]
+      }
+    };
+
+    let currentCategory = 'inspire';
+    let lastQuoteIndex = -1;
+
+    const quoteContainer = document.getElementById('quoteContainer');
+    const quoteTextEl = document.getElementById('quoteText');
+    const quoteSubEl = document.getElementById('quoteSub');
+    const nextQuoteBtn = document.getElementById('nextQuoteBtn');
+    const refreshIcon = document.getElementById('refreshIcon');
+    const catButtons = document.querySelectorAll('.cat-btn');
+
+    // 隨機抽取該分類下不重複的金句並帶過渡動畫
+    function renderRandomQuote(category, animate = true) {
+      const categoryObj = QUOTES_DATA[category];
+      if (!categoryObj) return;
+
+      const list = categoryObj.quotes;
+      let nextIndex = Math.floor(Math.random() * list.length);
+      if (list.length > 1 && nextIndex === lastQuoteIndex) {
+        nextIndex = (nextIndex + 1) % list.length;
+      }
+      lastQuoteIndex = nextIndex;
+      const selected = list[nextIndex];
+
+      if (animate) {
+        quoteContainer.classList.remove('quote-fade-in');
+        quoteContainer.classList.add('quote-fade-out');
+
+        setTimeout(() => {
+          quoteTextEl.textContent = selected.text;
+          quoteSubEl.textContent = `— ${selected.sub}`;
+
+          quoteContainer.classList.remove('quote-fade-out');
+          quoteContainer.classList.add('quote-fade-in');
+        }, 180);
+      } else {
+        quoteTextEl.textContent = selected.text;
+        quoteSubEl.textContent = `— ${selected.sub}`;
+      }
+    }
+
+    // 分類按鈕點擊事件
+    catButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const selectedCat = btn.getAttribute('data-category');
+        if (selectedCat === currentCategory) {
+          renderRandomQuote(currentCategory, true);
+          return;
+        }
+
+        currentCategory = selectedCat;
+        lastQuoteIndex = -1;
+
+        catButtons.forEach((b) => {
+          const isTarget = b === btn;
+          b.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+          if (isTarget) {
+            b.classList.add('active', 'bg-white', 'text-[#4A6654]', 'shadow-xs');
+            b.classList.remove('text-[#7A7368]', 'hover:text-[#3D3A35]');
+          } else {
+            b.classList.remove('active', 'bg-white', 'text-[#4A6654]', 'shadow-xs');
+            b.classList.add('text-[#7A7368]', 'hover:text-[#3D3A35]');
+          }
+        });
+
+        renderRandomQuote(currentCategory, true);
+      });
+    });
+
+    // 「換一句」按鈕事件
+    let rotationDeg = 0;
+    nextQuoteBtn.addEventListener('click', () => {
+      rotationDeg += 180;
+      refreshIcon.style.transform = `rotate(${rotationDeg}deg)`;
+      renderRandomQuote(currentCategory, true);
+    });
+
+    /**
+     * ============================================================================
+     * 2. Web Audio API 晨間冥想純音樂合成引擎 (無外部連結依賴)
+     * ============================================================================
+     */
+    class MeditationAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.activeNodes = [];
+        this.activeTimers = [];
+        this.isPlaying = false;
+        this.currentMode = 'bowl';
+        this.volume = 0.55;
+      }
+
+      initContext() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.setValueAtTime(0.001, this.ctx.currentTime);
+          this.masterGain.connect(this.ctx.destination);
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      // 產生平滑的粉紅噪音 Buffer，避免數位白噪音刺耳
+      createWarmNoiseBuffer(durationSec = 4) {
+        const sampleRate = this.ctx.sampleRate;
+        const length = sampleRate * durationSec;
+        const buffer = this.ctx.createBuffer(1, length, sampleRate);
+        const data = buffer.getChannelData(0);
+
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+        for (let i = 0; i < length; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + white * 0.0555179;
+          b1 = 0.99332 * b1 + white * 0.0750759;
+          b2 = 0.96900 * b2 + white * 0.1538520;
+          b3 = 0.86650 * b3 + white * 0.3104856;
+          b4 = 0.55000 * b4 + white * 0.5329522;
+          b5 = -0.7616 * b5 - white * 0.0168980;
+          data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.045;
+          b6 = white * 0.115926;
+        }
+        return buffer;
+      }
+
+      clearCurrentSoundscape() {
+        this.activeTimers.forEach((id) => clearInterval(id));
+        this.activeTimers = [];
+
+        this.activeNodes.forEach((node) => {
+          try {
+            if (node.stop) node.stop();
+            if (node.disconnect) node.disconnect();
+          } catch (e) {
+            // 忽略已停止節點的錯誤
+          }
+        });
+        this.activeNodes = [];
+      }
+
+      // 模式一：晨光頌缽 (432Hz 基準溫暖和弦 + 週期性輕柔頌缽泛音)
+      buildMorningBowl() {
+        const now = this.ctx.currentTime;
+        const subGain = this.ctx.createGain();
+        subGain.gain.setValueAtTime(0.45, now);
+        subGain.connect(this.masterGain);
+        this.activeNodes.push(subGain);
+
+        const baseFreqs = [174.61, 261.63, 329.63];
+        baseFreqs.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const oscGain = this.ctx.createGain();
+          const lfo = this.ctx.createOscillator();
+          const lfoGain = this.ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now);
+
+          lfo.type = 'sine';
+          lfo.frequency.setValueAtTime(0.08 + idx * 0.03, now);
+          lfoGain.gain.setValueAtTime(0.06, now);
+
+          oscGain.gain.setValueAtTime(idx === 0 ? 0.22 : 0.12, now);
+
+          lfo.connect(lfoGain);
+          lfoGain.connect(oscGain.gain);
+          osc.connect(oscGain);
+          oscGain.connect(subGain);
+
+          osc.start(now);
+          lfo.start(now);
+          this.activeNodes.push(osc, oscGain, lfo, lfoGain);
+        });
+
+        const triggerChime = () => {
+          if (!this.isPlaying || this.currentMode !== 'bowl') return;
+          const t = this.ctx.currentTime;
+          const chimeFreqs = [523.25, 659.25, 783.99];
+          const chosen = chimeFreqs[Math.floor(Math.random() * chimeFreqs.length)];
+
+          const bellOsc = this.ctx.createOscillator();
+          const harmonicOsc = this.ctx.createOscillator();
+          const bellGain = this.ctx.createGain();
+
+          bellOsc.type = 'sine';
+          bellOsc.frequency.setValueAtTime(chosen, t);
+
+          harmonicOsc.type = 'sine';
+          harmonicOsc.frequency.setValueAtTime(chosen * 2.003, t);
+
+          const harmGain = this.ctx.createGain();
+          harmGain.gain.setValueAtTime(0.18, t);
+
+          bellGain.gain.setValueAtTime(0.0001, t);
+          bellGain.gain.exponentialRampToValueAtTime(0.16, t + 0.12);
+          bellGain.gain.exponentialRampToValueAtTime(0.0001, t + 5.5);
+
+          bellOsc.connect(bellGain);
+          harmonicOsc.connect(harmGain);
+          harmGain.connect(bellGain);
+          bellGain.connect(subGain);
+
+          bellOsc.start(t);
+          harmonicOsc.start(t);
+          bellOsc.stop(t + 5.6);
+          harmonicOsc.stop(t + 5.6);
+        };
+
+        triggerChime();
+        const timer = setInterval(triggerChime, 6500);
+        this.activeTimers.push(timer);
+      }
+
+      // 模式二：靜謐微風 (低頻帶通濾波粉紅噪音 + 極慢速風速起伏)
+      buildCalmBreeze() {
+        const now = this.ctx.currentTime;
+        const buffer = this.createWarmNoiseBuffer(5);
+
+        const source = this.ctx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(340, now);
+        filter.Q.setValueAtTime(1.4, now);
+
+        const lfo = this.ctx.createOscillator();
+        const lfoGain = this.ctx.createGain();
+        lfo.type = 'sine';
+        lfo.frequency.setValueAtTime(0.11, now);
+        lfoGain.gain.setValueAtTime(140, now);
+
+        const breezeGain = this.ctx.createGain();
+        breezeGain.gain.setValueAtTime(0.85, now);
+
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+
+        source.connect(filter);
+        filter.connect(breezeGain);
+        breezeGain.connect(this.masterGain);
+
+        source.start(now);
+        lfo.start(now);
+
+        this.activeNodes.push(source, filter, lfo, lfoGain, breezeGain);
+      }
+
+      // 模式三：森林白噪 (溫潤細雨聲，柔和低通濾波)
+      buildSoftRain() {
+        const now = this.ctx.currentTime;
+        const buffer = this.createWarmNoiseBuffer(4);
+
+        const source = this.ctx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+
+        const lowpass = this.ctx.createBiquadFilter();
+        lowpass.type = 'lowpass';
+        lowpass.frequency.setValueAtTime(1150, now);
+        lowpass.Q.setValueAtTime(0.6, now);
+
+        const highpass = this.ctx.createBiquadFilter();
+        highpass.type = 'highpass';
+        highpass.frequency.setValueAtTime(140, now);
+
+        const rainGain = this.ctx.createGain();
+        rainGain.gain.setValueAtTime(0.75, now);
+
+        source.connect(highpass);
+        highpass.connect(lowpass);
+        lowpass.connect(rainGain);
+        rainGain.connect(this.masterGain);
+
+        source.start(now);
+        this.activeNodes.push(source, highpass, lowpass, rainGain);
+      }
+
+      startSoundscape(mode) {
+        this.initContext();
+        this.clearCurrentSoundscape();
+        this.currentMode = mode;
+
+        if (mode === 'bowl') this.buildMorningBowl();
+        else if (mode === 'breeze') this.buildCalmBreeze();
+        else if (mode === 'rain') this.buildSoftRain();
+
+        const now = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(now);
+        this.masterGain.gain.setValueAtTime(Math.max(this.masterGain.gain.value, 0.001), now);
+        this.masterGain.gain.exponentialRampToValueAtTime(Math.max(this.volume, 0.001), now + 0.6);
+        this.isPlaying = true;
+      }
+
+      play() {
+        this.startSoundscape(this.currentMode);
+      }
+
+      pause() {
+        if (!this.ctx || !this.isPlaying) return;
+        const now = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(now);
+        this.masterGain.gain.setValueAtTime(Math.max(this.masterGain.gain.value, 0.001), now);
+        this.masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+        this.isPlaying = false;
+        setTimeout(() => {
+          if (!this.isPlaying) {
+            this.clearCurrentSoundscape();
+          }
+        }, 380);
+      }
+
+      setMode(mode) {
+        this.currentMode = mode;
+        if (this.isPlaying) {
+          this.startSoundscape(mode);
+        }
+      }
+
+      setVolume(val) {
+        this.volume = parseFloat(val);
+        if (this.ctx && this.masterGain && this.isPlaying) {
+          const now = this.ctx.currentTime;
+          this.masterGain.gain.setTargetAtTime(Math.max(this.volume, 0.0001), now, 0.05);
+        }
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 3. 播放器 UI 互動綁定
+     * ============================================================================
+     */
+    const audioEngine = new MeditationAudioEngine();
+
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const playIcon = document.getElementById('playIcon');
+    const pauseIcon = document.getElementById('pauseIcon');
+    const soundWave = document.getElementById('soundWave');
+    const currentSoundTitle = document.getElementById('currentSoundTitle');
+    const playerStatusText = document.getElementById('playerStatusText');
+    const soundModeBtns = document.querySelectorAll('.sound-mode-btn');
+    const volumeSlider = document.getElementById('volumeSlider');
+
+    const SOUND_META = {
+      bowl: { title: '晨光頌缽', desc: '432Hz 溫暖泛音・喚醒平靜' },
+      breeze: { title: '靜謐微風', desc: '林間微風律動・舒緩緊繃' },
+      rain: { title: '森林白噪', desc: '溫潤細雨白噪・專注沉澱' }
+    };
+
+    function updatePlayerUI() {
+      const playing = audioEngine.isPlaying;
+      const meta = SOUND_META[audioEngine.currentMode];
+
+      currentSoundTitle.textContent = meta.title;
+      if (playing) {
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+        soundWave.classList.add('playing');
+        playerStatusText.textContent = `播放中 · ${meta.desc}`;
+        playerStatusText.classList.add('text-[#5B7A66]');
+        playerStatusText.classList.remove('text-[#847C70]');
+      } else {
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+        soundWave.classList.remove('playing');
+        playerStatusText.textContent = meta.desc;
+        playerStatusText.classList.remove('text-[#5B7A66]');
+        playerStatusText.classList.add('text-[#847C70]');
+      }
+    }
+
+    playPauseBtn.addEventListener('click', () => {
+      try {
+        if (audioEngine.isPlaying) {
+          audioEngine.pause();
+        } else {
+          audioEngine.play();
+        }
+        updatePlayerUI();
+      } catch (err) {
+        console.error('音訊播放初始化失敗:', err);
+        playerStatusText.textContent = '請再次點擊以啟動音訊';
+      }
+    });
+
+    soundModeBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-sound');
+        soundModeBtns.forEach((b) => {
+          const isTarget = b === btn;
+          if (isTarget) {
+            b.classList.add('active', 'bg-white', 'text-[#4A6654]', 'shadow-2xs');
+            b.classList.remove('text-[#787065]', 'hover:text-[#3D3A35]');
+          } else {
+            b.classList.remove('active', 'bg-white', 'text-[#4A6654]', 'shadow-2xs');
+            b.classList.add('text-[#787065]', 'hover:text-[#3D3A35]');
+          }
+        });
+
+        audioEngine.setMode(mode);
+        updatePlayerUI();
+      });
+    });
+
+    volumeSlider.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      audioEngine.setVolume(val);
+    });
+
+    // 頁面載入初始化
+    window.addEventListener('DOMContentLoaded', () => {
+      renderRandomQuote(currentCategory, false);
+      updatePlayerUI();
+    });
+  </script>
+</body>
+</html>
