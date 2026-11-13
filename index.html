@@ -153,4 +153,212 @@
           <div class="flex items-center gap-2 w-24">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#8C857B] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <path d="M15.54 8.46a5 5 0 0
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <input id="volume-slider" type="range" min="0" max="1" step="0.05" value="0.4" oninput="updateVolume(this.value)" class="w-full" />
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // 自動顯示今天日期與星期
+    function updateDate() {
+      const now = new Date();
+      const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+      document.getElementById('date-display').textContent = now.toLocaleDateString('zh-TW', options);
+    }
+    updateDate();
+
+    const quotesData = {
+      inspire: [
+        "今天的你，不需要一下子走完所有路，只要先踏出第一步就夠棒了。",
+        "每一個微小的累積，都在替未來的你鋪一條更輕鬆的路。",
+        "專注在今天能完成的一件小事上，你的節奏就是最好的節奏。",
+        "陽光每天都會重新升起，你也可以隨時為自己按下重新開始鍵。",
+        "別小看自己每天一點點的堅持，時間會給你最溫柔的回報。"
+      ],
+      funny: [
+        "早安！只要我賴床的速度夠快，煩惱就追不上我……好吧還是起床吧。",
+        "今天的工作目標：先喝一口水，假裝自己是個情緒穩定的大人。",
+        "別擔心今天會不會搞砸，反正明天還有明天的事情可以搞砸。",
+        "起床的第一步：打開眼睛；第二步：思考人生；第三步：算了先去吃早餐。",
+        "如果今天覺得很累，記住：連仙人掌都不用每天澆水，你偶爾擺爛一下很合理。"
+      ],
+      calm: [
+        "深呼吸，把肩膀放下來。今天就算只完成 60 分，也已經很足夠了。",
+        "先照顧好自己的心情，再去照顧待辦清單上的事情。",
+        "你不需要時時刻刻都充滿幹勁，累的時候安靜休息一會兒也沒關係。",
+        "給自己三分鐘的空白，聽聽呼吸的聲音，讓心慢慢安靜下來。",
+        "不管昨天發生了什麼，今天是一個乾淨、全新的早晨。"
+      ]
+    };
+
+    let currentCategory = 'inspire';
+    let lastQuoteIndex = 0;
+
+    function selectCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.classList.remove('bg-[#6B8E78]', 'text-white', 'shadow-sm');
+        btn.classList.add('bg-[#F0EDE6]', 'text-[#7D776C]');
+      });
+      const activeBtn = document.getElementById(`tab-${cat}`);
+      activeBtn.classList.remove('bg-[#F0EDE6]', 'text-[#7D776C]');
+      activeBtn.classList.add('bg-[#6B8E78]', 'text-white', 'shadow-sm');
+      nextQuote(true);
+    }
+
+    function nextQuote(reset = false) {
+      const list = quotesData[currentCategory];
+      const textEl = document.getElementById('quote-text');
+      let newIndex;
+      if (reset) {
+        newIndex = Math.floor(Math.random() * list.length);
+      } else {
+        do {
+          newIndex = Math.floor(Math.random() * list.length);
+        } while (newIndex === lastQuoteIndex && list.length > 1);
+      }
+      lastQuoteIndex = newIndex;
+      textEl.classList.add('quote-fade-out');
+      setTimeout(() => {
+        textEl.textContent = list[newIndex];
+        textEl.classList.remove('quote-fade-out');
+      }, 150);
+    }
+
+    let audioCtx = null;
+    let isPlaying = false;
+    let currentSound = 'bowl';
+    let masterGain = null;
+    let activeNodes = [];
+    let bowlInterval = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = document.getElementById('volume-slider').value;
+        masterGain.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function stopAllSounds() {
+      if (bowlInterval) { clearInterval(bowlInterval); bowlInterval = null; }
+      activeNodes.forEach(node => {
+        try { if (node.stop) node.stop(); if (node.disconnect) node.disconnect(); } catch (e) {}
+      });
+      activeNodes = [];
+    }
+
+    // 重新調校：非常柔和溫潤的頌缽和弦（溫暖和諧音頻，完全不刺耳）
+    function triggerBowlStrike() {
+      if (!audioCtx || !isPlaying) return;
+      const now = audioCtx.currentTime;
+      // 使用更和諧、低沈溫暖的頻率 (C大調舒緩和弦)
+      const freqs = [196.00, 293.66, 392.00]; 
+      freqs.forEach((f, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, now);
+
+        const peak = idx === 0 ? 0.18 : (idx === 1 ? 0.08 : 0.03);
+        gain.gain.setValueAtTime(0.0001, now);
+        // 拉長漸強與漸弱時間，讓聲音像遠處的溫柔鐘鳴
+        gain.gain.exponentialRampToValueAtTime(peak, now + 0.4);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 7.0);
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 7.2);
+        activeNodes.push(osc, gain);
+      });
+    }
+
+    function startSoundscape(type) {
+      initAudio();
+      stopAllSounds();
+      if (type === 'bowl') {
+        triggerBowlStrike();
+        bowlInterval = setInterval(triggerBowlStrike, 7500);
+      } else {
+        // 微風與森林白噪：大幅降低高頻，過濾成極度溫柔深沈的自然風聲
+        const bufferSize = 2 * audioCtx.sampleRate;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        let lastOut = 0.0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          output[i] = (lastOut + (0.02 * white)) / 1.02;
+          lastOut = output[i];
+          output[i] *= 2.0;
+        }
+        const whiteNoise = audioCtx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        // 微風更低沈 (180Hz)，森林稍微豐富一點 (350Hz)
+        filter.frequency.value = type === 'breeze' ? 180 : 350;
+        const envGain = audioCtx.createGain();
+        envGain.gain.value = type === 'breeze' ? 0.4 : 0.25;
+        whiteNoise.connect(filter);
+        filter.connect(envGain);
+        envGain.connect(masterGain);
+        whiteNoise.start(0);
+        activeNodes.push(whiteNoise, filter, envGain);
+      }
+    }
+
+    function togglePlay() {
+      const playIcon = document.getElementById('icon-play');
+      const pauseIcon = document.getElementById('icon-pause');
+      const waveContainer = document.getElementById('wave-container');
+      const statusText = document.getElementById('audio-status');
+
+      if (!isPlaying) {
+        isPlaying = true;
+        startSoundscape(currentSound);
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+        waveContainer.classList.add('playing');
+        statusText.textContent = '療癒音播放中...';
+      } else {
+        isPlaying = false;
+        stopAllSounds();
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+        waveContainer.classList.remove('playing');
+        statusText.textContent = '已暫停';
+      }
+    }
+
+    function selectSound(sound) {
+      currentSound = sound;
+      document.querySelectorAll('.sound-btn').forEach(btn => {
+        btn.classList.remove('bg-white', 'text-[#4A463E]', 'shadow-sm');
+        btn.classList.add('text-[#7D776C]');
+      });
+      const activeBtn = document.getElementById(`sound-${sound}`);
+      activeBtn.classList.remove('text-[#7D776C]');
+      activeBtn.classList.add('bg-white', 'text-[#4A463E]', 'shadow-sm');
+      if (isPlaying) { startSoundscape(currentSound); }
+    }
+
+    function updateVolume(val) {
+      if (masterGain && audioCtx) {
+        masterGain.gain.setTargetAtTime(val, audioCtx.currentTime, 0.05);
+      }
+    }
+  </script>
+</body>
+</html>
