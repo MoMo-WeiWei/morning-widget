@@ -198,7 +198,7 @@
         </span>
       </div>
 
-      <!-- 雙欄互動區：左側動作引導 + 右側擬真 Notion 操作試玩區 -->
+      <!-- 雙欄互動區：上方/左側動作引導 + 下方/右側擬真 Notion 操作試玩區 -->
       <div id="guide-card" class="fade-content grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
         
         <!-- 左側：簡潔引導提示 + 上下一步 (佔 5 欄) -->
@@ -214,7 +214,7 @@
               說明載入中
             </p>
             <div id="guide-hint-box" class="mt-1 bg-white/90 border border-[#E5E0D8] rounded-xl px-3.5 py-2.5 text-sm text-[#5A5449] leading-relaxed">
-              💡 試試看右邊的模擬區塊！
+              💡 請依序點擊下方的按鈕體驗！
             </div>
           </div>
 
@@ -245,7 +245,7 @@
               <span class="w-2.5 h-2.5 rounded-full bg-[#6B8E78]"></span>
               <span id="sim-header-title" class="ml-1 text-xs md:text-sm font-bold text-[#7D776C]">Notion 互動模擬區（可直接點擊體驗）</span>
             </div>
-            <span class="text-xs font-semibold text-[#6B8E78] bg-[#6B8E78]/10 px-2.5 py-0.5 rounded-md">請點擊下方按鈕</span>
+            <span class="text-xs font-semibold text-[#6B8E78] bg-[#6B8E78]/10 px-2.5 py-0.5 rounded-md">請點擊下方的按鈕</span>
           </div>
 
           <!-- 動態渲染各步驟的互動按鈕與模擬畫面 -->
@@ -254,7 +254,7 @@
           <!-- 底部即時操作反饋條 -->
           <div id="sim-feedback" class="mt-3 bg-[#F4F1EA] rounded-xl px-3.5 py-2 text-xs md:text-sm font-medium text-[#4E6E5A] flex items-center gap-2">
             <span>✦</span>
-            <span id="sim-feedback-text">點擊上方模擬區內的按鈕，體驗 Notion 系統實際運作方式！</span>
+            <span id="sim-feedback-text">請依序點擊下方的按鈕，體驗 Notion 系統實際運作方式！</span>
           </div>
         </div>
 
@@ -304,12 +304,11 @@
     }
 
     // ==========================================
-    // 2. 「怎麼用」5 階段互動沙盒狀態與邏輯
+    // 2. 「怎麼用」5 階段互動沙盒狀態與重置邏輯
     // ==========================================
     let currentStepIndex = 0;
 
-    // 沙盒模擬資料狀態
-    const simState = {
+    let simState = {
       step1Active: 0,
       step2Choice: null,
       step3Checks: [false, false],
@@ -321,41 +320,60 @@
       step5CalendarTasks: ['週五前提交設計初稿']
     };
 
+    // 每次進入或重置關卡時，將該關卡的狀態歸零
+    fnResetStepState = function(stepIdx) {
+      if (stepIdx === 0) {
+        simState.step1Active = 0;
+      } else if (stepIdx === 1) {
+        simState.step2Choice = null;
+      } else if (stepIdx === 2) {
+        simState.step3Checks = [false, false];
+        simState.step3Toggles = { shop: false, party: false };
+        simState.step3ExtraCount = 0;
+      } else if (stepIdx === 3) {
+        simState.step4Archived = false;
+        simState.step4NewWeekCreated = false;
+      } else if (stepIdx === 4) {
+        simState.step5TempTasks = ['研究下季行銷提案靈感'];
+        simState.step5CalendarTasks = ['週五前提交設計初稿'];
+      }
+    };
+
     const guideSteps = [
       {
         pill: "1. 晨間動線",
         badge: "STEP 01 · 每日開場",
         title: "先給自己能量補給，再依序看任務",
         desc: "每天早晨先在「今日補給」點金句、聽音樂放鬆神經；心情就緒後，依序由上往下瀏覽頁面。",
-        hint: "👉 請依序點擊右邊的 1、2、3 動線按鈕，感受每天早上的瀏覽順序。"
+        hint: "👉 請依序點擊下方的 1、2、3 按鈕，感受每天早上的瀏覽順序。"
       },
       {
         pill: "2. 任務分流",
         badge: "STEP 02 · 前晚分類",
         title: "前一天晚上先判斷：簡易 vs 複雜",
         desc: "睡前花 2 分鐘將腦中的待辦分流：例行瑣事放「簡易週任務」，需要追蹤進度的放「資料庫追蹤區」。",
-        hint: "👉 點擊右邊的任務按鈕，幫它們選擇該放進哪一個區塊！"
+        hint: "👉 點擊下方的任務按鈕，幫它們選擇該放進哪一個區塊！"
       },
       {
         pill: "3. 簡易週任務",
         badge: "STEP 03 · 週任務區塊實戰",
         title: "免建資料庫！勾選、拖拉與折疊長清單",
         desc: "以「⏰ 鬧鐘圖樣」突出當日任務。按 [ ] + 空格建核取方塊，按 > + 空格用折疊列表收合購物清單或聚餐細節。",
-        hint: "👉 直接點擊右邊的核取方塊打勾、點「▶」展開折疊清單，或按按鈕體驗新增！"
+        hint: "👉 直接點擊下方的核取方塊打勾、點「▶」展開折疊清單，或按按鈕體驗新增！"
       },
       {
         pill: "4. 封存與開新週",
         badge: "STEP 04 · 每週重置流程",
         title: "整週結束後：放入封存區 + 開啟新一週",
         desc: "整週任務勾選結束後，將當週區塊轉成頁面放入「封存任務」（方便日後反推幾月幾號做過），再按「新一週任務」。",
-        hint: "👉 依序點擊右邊的「📦 移入封存任務」與「🆕 新一週任務」按鈕體驗換週！"
+        hint: "👉 依序點擊下方的「📦 移入封存任務」與「🆕 新一週任務」按鈕體驗換週！"
       },
       {
         pill: "5. 資料庫追蹤",
         badge: "STEP 05 · 快速按鈕與日曆",
         title: "臨時靈感先暫存，有空直接拉進日曆",
         desc: "沒截止日的靈感按「任務暫存」，有確切日期按「有新任務！」。空閒時再把暫存任務拉進日曆日期。",
-        hint: "👉 點擊右邊「💡 任務暫存」或「🎯 有新任務！」，再點卡片把任務排進日曆！"
+        hint: "👉 點擊下方「💡 任務暫存」或「🎯 有新任務！」，再點卡片把任務排進日曆！"
       }
     ];
 
@@ -443,17 +461,23 @@
 
             <!-- 核取方塊項目 -->
             <div class="flex flex-col gap-1.5">
-              <label onclick="simToggleCheck(0)" class="flex items-center gap-2.5 p-2 rounded-lg bg-white border border-[#EAE5DC] cursor-pointer hover:border-[#6B8E78]">
-                <span class="text-[#9E978B] select-none">⠿</span>
-                <input type="checkbox" ${simState.step3Checks[0] ? 'checked' : ''} class="w-4 h-4 accent-[#6B8E78] pointer-events-none" />
-                <span class="text-sm font-medium ${simState.step3Checks[0] ? 'line-through text-[#9E978B]' : 'text-[#3E3A33]'}">回覆客戶專案報價信</span>
+              <label onclick="simToggleCheck(0)" class="flex items-center justify-between p-2 rounded-lg bg-white border border-[#EAE5DC] cursor-pointer hover:border-[#6B8E78]">
+                <div class="flex items-center gap-2.5">
+                  <span class="text-[#9E978B] select-none">⠿</span>
+                  <input type="checkbox" ${simState.step3Checks[0] ? 'checked' : ''} class="w-4 h-4 accent-[#6B8E78] pointer-events-none" />
+                  <span class="text-sm font-medium ${simState.step3Checks[0] ? 'line-through text-[#9E978B]' : 'text-[#3E3A33]'}">回覆客戶專案報價信</span>
+                </div>
+                <span class="text-[11px] text-[#7D776C] bg-[#F0EDE6] px-2 py-0.5 rounded shrink-0">[ ] + 空格鍵</span>
               </label>
 
               ${simState.step3ExtraCount > 0 ? `
-                <label onclick="simToggleCheck(1)" class="flex items-center gap-2.5 p-2 rounded-lg bg-white border border-[#6B8E78] cursor-pointer">
-                  <span class="text-[#9E978B] select-none">⠿</span>
-                  <input type="checkbox" ${simState.step3Checks[1] ? 'checked' : ''} class="w-4 h-4 accent-[#6B8E78] pointer-events-none" />
-                  <span class="text-sm font-medium ${simState.step3Checks[1] ? 'line-through text-[#9E978B]' : 'text-[#3E3A33]'}">✨ 剛換行新增的待辦事項</span>
+                <label onclick="simToggleCheck(1)" class="flex items-center justify-between p-2 rounded-lg bg-white border border-[#6B8E78] cursor-pointer">
+                  <div class="flex items-center gap-2.5">
+                    <span class="text-[#9E978B] select-none">⠿</span>
+                    <input type="checkbox" ${simState.step3Checks[1] ? 'checked' : ''} class="w-4 h-4 accent-[#6B8E78] pointer-events-none" />
+                    <span class="text-sm font-medium ${simState.step3Checks[1] ? 'line-through text-[#9E978B]' : 'text-[#3E3A33]'}">✨ 剛換行新增的待辦事項</span>
+                  </div>
+                  <span class="text-[11px] text-[#7D776C] bg-[#F0EDE6] px-2 py-0.5 rounded shrink-0">[ ] + 空格鍵</span>
                 </label>
               ` : ''}
             </div>
@@ -670,8 +694,10 @@
       renderSimArea();
     }
 
-    // --- 渲染關卡主控制器 ---
+    // --- 渲染關卡主控制器（每次切換或重頭體驗時自動歸零重置） ---
     function renderGuideStep() {
+      fnResetStepState(currentStepIndex); // 每次切換關卡時自動重置該關卡狀態
+
       const step = guideSteps[currentStepIndex];
       const pillsContainer = document.getElementById('step-pills');
       const card = document.getElementById('guide-card');
@@ -697,7 +723,7 @@
         const nextBtn = document.getElementById('btn-next-step');
         nextBtn.textContent = currentStepIndex === guideSteps.length - 1 ? '↺ 從頭體驗' : '下一步 →';
 
-        setSimFeedback("點擊右方模擬區內的按鈕，親自試試看操作效果！");
+        setSimFeedback("請依序點擊下方的按鈕，體驗 Notion 系統實際運作方式！");
         renderSimArea();
         card.classList.remove('fade-out');
       }, 150);
@@ -710,7 +736,7 @@
 
     function changeStep(delta) {
       if (delta === 1 && currentStepIndex === guideSteps.length - 1) {
-        currentStepIndex = 0;
+        currentStepIndex = 0; // 循環回到第一步，並會自動觸發重置
       } else {
         currentStepIndex = Math.max(0, Math.min(guideSteps.length - 1, currentStepIndex + delta));
       }
