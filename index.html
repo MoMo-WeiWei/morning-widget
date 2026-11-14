@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>今日補給 - 晨間能量與冥想小工具</title>
+  <title>今日補給與 Notion 互動體驗沙盒</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,12 +24,12 @@
       box-shadow: 0 6px 20px -4px rgba(74, 70, 62, 0.08);
     }
 
-    .quote-fade {
+    .fade-content {
       transition: opacity 0.2s ease, transform 0.2s ease;
     }
-    .quote-fade-out {
+    .fade-out {
       opacity: 0;
-      transform: translateY(2px);
+      transform: translateY(3px);
     }
 
     @keyframes wavePulse {
@@ -69,24 +69,48 @@
       margin-top: -5.5px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.2);
     }
+
+    @keyframes pulseBorder {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(107, 142, 120, 0.4); }
+      50% { box-shadow: 0 0 0 5px rgba(107, 142, 120, 0); }
+    }
+    .guide-highlight {
+      animation: pulseBorder 2s infinite;
+    }
   </style>
 </head>
 <body>
 
   <div class="widget-banner w-full rounded-2xl px-5 py-6 md:px-8 md:py-7 text-[#4A463E]">
     
-    <!-- 頂部標題列：今日補給 + 日期星期 -->
-    <div class="flex items-center justify-between pb-4 mb-4 border-b border-[#E5E0D8]">
-      <div class="flex items-center gap-2.5">
-        <span class="w-2.5 h-2.5 rounded-full bg-[#6B8E78]"></span>
-        <h1 class="text-lg md:text-xl font-bold tracking-wide text-[#3E3A33]">今日補給</h1>
+    <!-- 頂部導覽列：今日補給 / 怎麼用 切換 + 日期星期 -->
+    <div class="flex flex-wrap items-center justify-between gap-3 pb-4 mb-5 border-b border-[#E5E0D8]">
+      <div class="flex items-center gap-2 bg-[#F0EDE6] p-1.5 rounded-xl" role="tablist">
+        <button
+          id="main-tab-daily"
+          onclick="switchMainPage('daily')"
+          class="px-4 py-2 rounded-lg text-sm md:text-[15px] font-bold transition-all bg-[#6B8E78] text-white shadow-sm flex items-center gap-1.5"
+        >
+          <span>✦ 今日補給</span>
+        </button>
+        <button
+          id="main-tab-guide"
+          onclick="switchMainPage('guide')"
+          class="px-4 py-2 rounded-lg text-sm md:text-[15px] font-bold transition-all text-[#7D776C] hover:text-[#4A463E] flex items-center gap-1.5"
+        >
+          <span>❓ 怎麼用（互動練習）</span>
+        </button>
       </div>
+
       <div id="date-display" class="text-sm font-medium text-[#7D776C]">
         載入日期中...
       </div>
     </div>
 
-    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 md:gap-7">
+    <!-- ========================================== -->
+    <!-- 頁面一：今日補給                           -->
+    <!-- ========================================== -->
+    <div id="page-daily" class="fade-content flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 md:gap-7">
       
       <!-- 左側：分類與金句 -->
       <div class="flex-1 min-w-0 flex flex-col justify-between gap-4">
@@ -113,7 +137,7 @@
         </div>
 
         <div class="bg-[#F4F1EA] border border-[#EAE5DC] rounded-2xl px-5 py-5 min-h-[96px] flex items-center">
-          <p id="quote-text" class="quote-fade text-[20px] md:text-[22px] font-medium leading-relaxed text-[#3E3A33] tracking-wide">
+          <p id="quote-text" class="fade-content text-[20px] md:text-[22px] font-medium leading-relaxed text-[#3E3A33] tracking-wide">
             今天的你，不需要一下子走完所有路，只要先踏出第一步就夠棒了。
           </p>
         </div>
@@ -159,12 +183,91 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 頁面二：「怎麼用」可點擊互動模擬沙盒       -->
+    <!-- ========================================== -->
+    <div id="page-guide" class="hidden fade-content flex-col gap-4">
+      
+      <!-- 頂部步驟切換膠囊 -->
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div id="step-pills" class="flex flex-wrap items-center gap-1.5"></div>
+        <span id="step-counter" class="text-sm font-semibold text-[#6B8E78] bg-[#6B8E78]/10 px-3 py-1 rounded-full">
+          關卡 1 / 5
+        </span>
+      </div>
+
+      <!-- 雙欄互動區：左側動作引導 + 右側擬真 Notion 操作試玩區 -->
+      <div id="guide-card" class="fade-content grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+        
+        <!-- 左側：簡潔引導提示 + 上下一步 (佔 5 欄) -->
+        <div class="lg:col-span-5 bg-[#F4F1EA] border border-[#EAE5DC] rounded-2xl p-5 flex flex-col justify-between gap-4">
+          <div class="flex flex-col gap-2.5">
+            <span id="guide-badge" class="self-start px-3 py-1 rounded-lg bg-[#6B8E78] text-white text-xs font-bold tracking-wide">
+              STEP 01 · 晨間動線
+            </span>
+            <h2 id="guide-title" class="text-lg md:text-xl font-bold text-[#3E3A33]">
+              標題載入中
+            </h2>
+            <p id="guide-desc" class="text-[16px] md:text-[17px] font-medium leading-relaxed text-[#4A463E]">
+              說明載入中
+            </p>
+            <div id="guide-hint-box" class="mt-1 bg-white/90 border border-[#E5E0D8] rounded-xl px-3.5 py-2.5 text-sm text-[#5A5449] leading-relaxed">
+              💡 試試看右邊的模擬區塊！
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between gap-2 pt-3 border-t border-[#E5E0D8]">
+            <button
+              id="btn-prev-step"
+              onclick="changeStep(-1)"
+              class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-white border border-[#E5E0D8] text-[#7D776C] hover:text-[#3E3A33] disabled:opacity-40 disabled:pointer-events-none transition-all"
+            >
+              ← 上一步
+            </button>
+            <button
+              id="btn-next-step"
+              onclick="changeStep(1)"
+              class="px-4 py-2 rounded-xl text-sm font-semibold bg-[#6B8E78] hover:bg-[#5A7B66] active:scale-95 text-white shadow-sm transition-all"
+            >
+              下一步 →
+            </button>
+          </div>
+        </div>
+
+        <!-- 右側：擬真 Notion 互動體驗區塊 (佔 7 欄) -->
+        <div class="lg:col-span-7 bg-white border-2 border-[#D8D2C5] rounded-2xl p-4 md:p-5 flex flex-col justify-between shadow-inner">
+          <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-[#EFECE6]">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#E07A5F]"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-[#F2CC8F]"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-[#6B8E78]"></span>
+              <span id="sim-header-title" class="ml-1 text-xs md:text-sm font-bold text-[#7D776C]">Notion 互動模擬區（可直接點擊體驗）</span>
+            </div>
+            <span class="text-xs font-semibold text-[#6B8E78] bg-[#6B8E78]/10 px-2.5 py-0.5 rounded-md">請點擊下方按鈕</span>
+          </div>
+
+          <!-- 動態渲染各步驟的互動按鈕與模擬畫面 -->
+          <div id="sim-interactive-area" class="flex-1 flex flex-col justify-center"></div>
+
+          <!-- 底部即時操作反饋條 -->
+          <div id="sim-feedback" class="mt-3 bg-[#F4F1EA] rounded-xl px-3.5 py-2 text-xs md:text-sm font-medium text-[#4E6E5A] flex items-center gap-2">
+            <span>✦</span>
+            <span id="sim-feedback-text">點擊上方模擬區內的按鈕，體驗 Notion 系統實際運作方式！</span>
+          </div>
+        </div>
+
+      </div>
 
     </div>
+
   </div>
 
   <script>
-    // 自動顯示今天日期與星期
+    // ==========================================
+    // 1. 日期顯示與主頁面切換
+    // ==========================================
     function updateDate() {
       const now = new Date();
       const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
@@ -172,6 +275,451 @@
     }
     updateDate();
 
+    function switchMainPage(page) {
+      const dailyPage = document.getElementById('page-daily');
+      const guidePage = document.getElementById('page-guide');
+      const dailyTab = document.getElementById('main-tab-daily');
+      const guideTab = document.getElementById('main-tab-guide');
+
+      if (page === 'daily') {
+        guidePage.classList.add('hidden');
+        guidePage.classList.remove('flex');
+        dailyPage.classList.remove('hidden');
+        
+        dailyTab.classList.add('bg-[#6B8E78]', 'text-white', 'shadow-sm');
+        dailyTab.classList.remove('text-[#7D776C]');
+        guideTab.classList.remove('bg-[#6B8E78]', 'text-white', 'shadow-sm');
+        guideTab.classList.add('text-[#7D776C]');
+      } else {
+        dailyPage.classList.add('hidden');
+        guidePage.classList.remove('hidden');
+        guidePage.classList.add('flex');
+
+        guideTab.classList.add('bg-[#6B8E78]', 'text-white', 'shadow-sm');
+        guideTab.classList.remove('text-[#7D776C]');
+        dailyTab.classList.remove('bg-[#6B8E78]', 'text-white', 'shadow-sm');
+        dailyTab.classList.add('text-[#7D776C]');
+        renderGuideStep();
+      }
+    }
+
+    // ==========================================
+    // 2. 「怎麼用」5 階段互動沙盒狀態與邏輯
+    // ==========================================
+    let currentStepIndex = 0;
+
+    // 沙盒模擬資料狀態
+    const simState = {
+      step1Active: 0,
+      step2Choice: null,
+      step3Checks: [false, false],
+      step3Toggles: { shop: false, party: false },
+      step3ExtraCount: 0,
+      step4Archived: false,
+      step4NewWeekCreated: false,
+      step5TempTasks: ['研究下季行銷提案靈感'],
+      step5CalendarTasks: ['週五前提交設計初稿']
+    };
+
+    const guideSteps = [
+      {
+        pill: "1. 晨間動線",
+        badge: "STEP 01 · 每日開場",
+        title: "先給自己能量補給，再依序看任務",
+        desc: "每天早晨先在「今日補給」點金句、聽音樂放鬆神經；心情就緒後，依序由上往下瀏覽頁面。",
+        hint: "👉 請依序點擊右邊的 1、2、3 動線按鈕，感受每天早上的瀏覽順序。"
+      },
+      {
+        pill: "2. 任務分流",
+        badge: "STEP 02 · 前晚分類",
+        title: "前一天晚上先判斷：簡易 vs 複雜",
+        desc: "睡前花 2 分鐘將腦中的待辦分流：例行瑣事放「簡易週任務」，需要追蹤進度的放「資料庫追蹤區」。",
+        hint: "👉 點擊右邊的任務按鈕，幫它們選擇該放進哪一個區塊！"
+      },
+      {
+        pill: "3. 簡易週任務",
+        badge: "STEP 03 · 週任務區塊實戰",
+        title: "免建資料庫！勾選、拖拉與折疊長清單",
+        desc: "以「⏰ 鬧鐘圖樣」突出當日任務。按 [ ] + 空格建核取方塊，按 > + 空格用折疊列表收合購物清單或聚餐細節。",
+        hint: "👉 直接點擊右邊的核取方塊打勾、點「▶」展開折疊清單，或按按鈕體驗新增！"
+      },
+      {
+        pill: "4. 封存與開新週",
+        badge: "STEP 04 · 每週重置流程",
+        title: "整週結束後：放入封存區 + 開啟新一週",
+        desc: "整週任務勾選結束後，將當週區塊轉成頁面放入「封存任務」（方便日後反推幾月幾號做過），再按「新一週任務」。",
+        hint: "👉 依序點擊右邊的「📦 移入封存任務」與「🆕 新一週任務」按鈕體驗換週！"
+      },
+      {
+        pill: "5. 資料庫追蹤",
+        badge: "STEP 05 · 快速按鈕與日曆",
+        title: "臨時靈感先暫存，有空直接拉進日曆",
+        desc: "沒截止日的靈感按「任務暫存」，有確切日期按「有新任務！」。空閒時再把暫存任務拉進日曆日期。",
+        hint: "👉 點擊右邊「💡 任務暫存」或「🎯 有新任務！」，再點卡片把任務排進日曆！"
+      }
+    ];
+
+    function setSimFeedback(msg) {
+      const el = document.getElementById('sim-feedback-text');
+      if (el) el.innerHTML = msg;
+    }
+
+    function renderSimArea() {
+      const area = document.getElementById('sim-interactive-area');
+      const headerTitle = document.getElementById('sim-header-title');
+
+      // --- 關卡 1：晨間動線按鈕 ---
+      if (currentStepIndex === 0) {
+        headerTitle.textContent = "模擬畫面：每日早晨瀏覽順序";
+        const items = [
+          { num: "1", icon: "✨", title: "今日補給區", sub: "點選金句風格 + 播放柔和音樂舒緩神經", fb: "✅ 第 1 步完成：先穩定情緒與能量，不急著馬上處理雜事！" },
+          { num: "2", icon: "⏰", title: "簡易週任務區塊", sub: "一眼看清今天（鬧鐘標示）有哪些例行代辦", fb: "✅ 第 2 步完成：快速掌握今日必做的簡易小事。" },
+          { num: "3", icon: "📅", title: "資料庫追蹤任務區", sub: "往下查看本週需要持續推進與追蹤的任務", fb: "✅ 第 3 步完成：確認本週重要專案進度，開始專注執行！" }
+        ];
+        area.innerHTML = `
+          <div class="flex flex-col gap-2.5">
+            ${items.map((it, idx) => {
+              const active = simState.step1Active === idx;
+              return `
+                <button onclick="simClickStep1(${idx})" class="w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between gap-3 ${active ? 'bg-[#6B8E78]/15 border-[#6B8E78] guide-highlight' : 'bg-[#FAF9F6] border-[#E5E0D8] hover:bg-[#F4F1EA]'}">
+                  <div class="flex items-center gap-3">
+                    <span class="w-7 h-7 rounded-full ${active ? 'bg-[#6B8E78] text-white' : 'bg-[#E5E0D8] text-[#575248]'} text-xs font-bold flex items-center justify-center shrink-0">${it.num}</span>
+                    <div>
+                      <div class="text-sm md:text-[15px] font-bold text-[#3E3A33]">${it.icon} ${it.title}</div>
+                      <div class="text-xs text-[#7D776C]">${it.sub}</div>
+                    </div>
+                  </div>
+                  <span class="text-xs font-bold px-2.5 py-1 rounded-lg ${active ? 'bg-[#6B8E78] text-white' : 'bg-white text-[#7D776C] border border-[#E5E0D8]'}">
+                    ${active ? '目前步驟' : '點我檢視'}
+                  </span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }
+
+      // --- 關卡 2：任務分流互動 ---
+      else if (currentStepIndex === 1) {
+        headerTitle.textContent = "模擬練習：前晚思考任務要放哪裡？";
+        area.innerHTML = `
+          <div class="flex flex-col gap-3">
+            <div class="bg-[#FAF9F6] border border-[#E5E0D8] rounded-xl p-3">
+              <div class="text-xs font-bold text-[#7D776C] mb-2">情境任務：「去全聯買牛奶、順便繳水電費」</div>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="simChooseSplit('simple')" class="flex-1 py-2 px-3 rounded-lg text-xs md:text-sm font-bold border transition-all ${simState.step2Choice === 'simple' ? 'bg-[#6B8E78] text-white border-[#6B8E78]' : 'bg-white text-[#3E3A33] border-[#D8D2C5] hover:bg-[#F4F1EA]'}">
+                  ⚡ 放「簡易週任務區」
+                </button>
+                <button onclick="simChooseSplit('db')" class="flex-1 py-2 px-3 rounded-lg text-xs md:text-sm font-bold border transition-all ${simState.step2Choice === 'db' ? 'bg-[#E07A5F] text-white border-[#E07A5F]' : 'bg-white text-[#3E3A33] border-[#D8D2C5] hover:bg-[#F4F1EA]'}">
+                  📊 放「資料庫追蹤區」
+                </button>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5 text-xs">
+              <div class="bg-[#F4F1EA] rounded-xl p-3 border border-[#EAE5DC]">
+                <div class="font-bold text-[#3E3A33] mb-1">⚡ 簡易週任務適合：</div>
+                <div class="text-[#6B6459] leading-relaxed">買東西、訂餐廳、繳費、每週例行小事（不需建資料庫）</div>
+              </div>
+              <div class="bg-[#F4F1EA] rounded-xl p-3 border border-[#EAE5DC]">
+                <div class="font-bold text-[#3E3A33] mb-1">📊 資料庫追蹤適合：</div>
+                <div class="text-[#6B6459] leading-relaxed">專案企劃、有截止日、需要排進日曆追蹤進度的任務</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // --- 關卡 3：簡易週任務區塊（核取方塊 + 折疊列表） ---
+      else if (currentStepIndex === 2) {
+        headerTitle.textContent = "模擬操作：簡易週任務區塊（可實際點擊）";
+        area.innerHTML = `
+          <div class="bg-[#FAF9F6] border border-[#E5E0D8] rounded-xl p-3.5 flex flex-col gap-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold px-2 py-0.5 rounded bg-[#E07A5F]/15 text-[#C85A3F]">⏰ 今日重點任務</span>
+              <button onclick="simAddTodo()" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-[#6B8E78] text-white active:scale-95 transition-all">
+                + 模擬換行新增 [ ]
+              </button>
+            </div>
+
+            <!-- 核取方塊項目 -->
+            <div class="flex flex-col gap-1.5">
+              <label onclick="simToggleCheck(0)" class="flex items-center gap-2.5 p-2 rounded-lg bg-white border border-[#EAE5DC] cursor-pointer hover:border-[#6B8E78]">
+                <span class="text-[#9E978B] select-none">⠿</span>
+                <input type="checkbox" ${simState.step3Checks[0] ? 'checked' : ''} class="w-4 h-4 accent-[#6B8E78] pointer-events-none" />
+                <span class="text-sm font-medium ${simState.step3Checks[0] ? 'line-through text-[#9E978B]' : 'text-[#3E3A33]'}">回覆客戶專案報價信</span>
+              </label>
+
+              ${simState.step3ExtraCount > 0 ? `
+                <label onclick="simToggleCheck(1)" class="flex items-center gap-2.5 p-2 rounded-lg bg-white border border-[#6B8E78] cursor-pointer">
+                  <span class="text-[#9E978B] select-none">⠿</span>
+                  <input type="checkbox" ${simState.step3Checks[1] ? 'checked' : ''} class="w-4 h-4 accent-[#6B8E78] pointer-events-none" />
+                  <span class="text-sm font-medium ${simState.step3Checks[1] ? 'line-through text-[#9E978B]' : 'text-[#3E3A33]'}">✨ 剛換行新增的待辦事項</span>
+                </label>
+              ` : ''}
+            </div>
+
+            <!-- 折疊列表 ( > + 空格 ) -->
+            <div class="flex flex-col gap-1.5 pt-1 border-t border-[#EAE5DC]">
+              <div class="bg-white border border-[#EAE5DC] rounded-lg overflow-hidden">
+                <button onclick="simToggleAccordion('shop')" class="w-full flex items-center justify-between p-2 text-left hover:bg-[#F4F1EA]">
+                  <div class="flex items-center gap-2 text-sm font-bold text-[#3E3A33]">
+                    <span class="text-[#9E978B]">⠿</span>
+                    <span>${simState.step3Toggles.shop ? '▼' : '▶'} 🛒 購物清單（折疊列表）</span>
+                  </div>
+                  <span class="text-[11px] text-[#7D776C] bg-[#F0EDE6] px-2 py-0.5 rounded">> + 空格鍵</span>
+                </button>
+                ${simState.step3Toggles.shop ? `
+                  <div class="px-8 pb-2.5 pt-1 text-xs text-[#575248] flex flex-col gap-1 bg-[#FAF9F6]">
+                    <div>• 鮮奶、雞蛋、全麥吐司</div>
+                    <div>• 補充包洗衣精（收合起來就不佔版面！）</div>
+                  </div>
+                ` : ''}
+              </div>
+
+              <div class="bg-white border border-[#EAE5DC] rounded-lg overflow-hidden">
+                <button onclick="simToggleAccordion('party')" class="w-full flex items-center justify-between p-2 text-left hover:bg-[#F4F1EA]">
+                  <div class="flex items-center gap-2 text-sm font-bold text-[#3E3A33]">
+                    <span class="text-[#9E978B]">⠿</span>
+                    <span>${simState.step3Toggles.party ? '▼' : '▶'} 🍽️ 年會聚餐訂位細節</span>
+                  </div>
+                  <span class="text-[11px] text-[#7D776C] bg-[#F0EDE6] px-2 py-0.5 rounded">點我展開細節</span>
+                </button>
+                ${simState.step3Toggles.party ? `
+                  <div class="px-8 pb-2.5 pt-1 text-xs text-[#575248] flex flex-col gap-1 bg-[#FAF9F6]">
+                    <div>• 時間：週五 19:00（訂位大名：王小姐 / 12位）</div>
+                    <div>• 備註：需素食套餐 2 份</div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // --- 關卡 4：每週封存與開啟新一週 ---
+      else if (currentStepIndex === 3) {
+        headerTitle.textContent = "模擬操作：整週完成後的封存與開新週";
+        area.innerHTML = `
+          <div class="flex flex-col gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <!-- 左邊：當週任務狀態 -->
+              <div class="bg-[#FAF9F6] border border-[#E5E0D8] rounded-xl p-3 flex flex-col justify-between gap-2">
+                <div class="text-xs font-bold text-[#3E3A33]">
+                  ${simState.step4NewWeekCreated ? '🆕 本週任務（全新空白週）' : (simState.step4Archived ? '✅ 本週區塊已移入封存！' : '☑️ 本週任務（已全部勾選完成）')}
+                </div>
+                <div class="text-xs text-[#6B6459] bg-white p-2 rounded-lg border border-[#EAE5DC]">
+                  ${simState.step4NewWeekCreated
+                    ? '⏰ 週一：建立本週重點目標<br>[ ] 填寫本週例行待辦...'
+                    : (simState.step4Archived
+                      ? '目前版面已清空，請點擊下方「新一週任務」按鈕！'
+                      : '☑ 週一～週五例行事項已全部完成！')}
+                </div>
+                <div class="flex flex-wrap gap-1.5 pt-1">
+                  <button onclick="simArchiveWeek()" ${simState.step4Archived ? 'disabled' : ''} class="flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold bg-[#4A463E] text-white disabled:opacity-40 active:scale-95 transition-all">
+                    📦 1. 放入封存任務
+                  </button>
+                  <button onclick="simNewWeek()" class="flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold bg-[#6B8E78] text-white active:scale-95 transition-all">
+                    🆕 2. 新一週任務
+                  </button>
+                </div>
+              </div>
+
+              <!-- 右邊：封存任務頁面 -->
+              <div class="bg-[#F4F1EA] border border-[#EAE5DC] rounded-xl p-3 flex flex-col justify-between gap-2">
+                <div class="text-xs font-bold text-[#3E3A33]">📁 封存任務頁面（歷史紀錄庫）</div>
+                <div class="flex flex-col gap-1.5 text-xs">
+                  ${simState.step4Archived ? `
+                    <div class="bg-white border border-[#6B8E78] text-[#3E3A33] font-bold px-2.5 py-1.5 rounded-lg flex items-center justify-between">
+                      <span>📄 剛封存的當週任務</span>
+                      <span class="text-[11px] text-[#6B8E78]">可隨時反推日期</span>
+                    </div>
+                  ` : ''}
+                  <div class="bg-white/70 border border-[#E5E0D8] text-[#7D776C] px-2.5 py-1.5 rounded-lg">
+                    📄 11月第1週 任務紀錄
+                  </div>
+                  <div class="bg-white/70 border border-[#E5E0D8] text-[#7D776C] px-2.5 py-1.5 rounded-lg">
+                    📄 10月第4週 任務紀錄
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // --- 關卡 5：資料庫快速按鈕與日曆排程 ---
+      else if (currentStepIndex === 4) {
+        headerTitle.textContent = "模擬操作：資料庫快速按鈕與日曆排程";
+        area.innerHTML = `
+          <div class="flex flex-col gap-3">
+            <!-- 兩個快捷按鈕 -->
+            <div class="flex flex-wrap gap-2">
+              <button onclick="simAddTempTask()" class="flex-1 py-2 px-3 rounded-xl text-xs md:text-sm font-bold bg-[#F0EDE6] hover:bg-[#E5E0D8] text-[#3E3A33] border border-[#D8D2C5] active:scale-95 transition-all">
+                💡 任務暫存（無截止日靈感）
+              </button>
+              <button onclick="simAddTodayDbTask()" class="flex-1 py-2 px-3 rounded-xl text-xs md:text-sm font-bold bg-[#6B8E78] hover:bg-[#5A7B66] text-white shadow-sm active:scale-95 transition-all">
+                🎯 有新任務！（建置當天追蹤）
+              </button>
+            </div>
+
+            <!-- 暫存區 vs 日曆檢視 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div class="bg-[#FAF9F6] border border-[#E5E0D8] rounded-xl p-2.5">
+                <div class="text-xs font-bold text-[#7D776C] mb-1.5">📥 暫存任務列表（點卡片拉進日曆）</div>
+                <div class="flex flex-col gap-1.5">
+                  ${simState.step5TempTasks.length === 0
+                    ? '<div class="text-xs text-[#9E978B] py-2 text-center">暫存區已清空！可按上方按鈕新增</div>'
+                    : simState.step5TempTasks.map((t, i) => `
+                      <button onclick="simMoveToCalendar(${i})" class="w-full text-left bg-white hover:bg-[#6B8E78]/10 border border-[#EAE5DC] hover:border-[#6B8E78] rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#3E3A33] flex items-center justify-between gap-1 transition-all">
+                        <span class="truncate">• ${t}</span>
+                        <span class="text-[11px] font-bold text-[#6B8E78] shrink-0">排入日曆 →</span>
+                      </button>
+                    `).join('')}
+                </div>
+              </div>
+
+              <div class="bg-[#F4F1EA] border border-[#EAE5DC] rounded-xl p-2.5">
+                <div class="text-xs font-bold text-[#3E3A33] mb-1.5">📅 日曆檢視（已排程追蹤任務）</div>
+                <div class="flex flex-col gap-1.5">
+                  ${simState.step5CalendarTasks.map(t => `
+                    <div class="bg-white border-l-4 border-[#6B8E78] rounded-r-lg px-2.5 py-1.5 text-xs font-semibold text-[#3E3A33] shadow-sm">
+                      📌 ${t}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // --- 沙盒互動事件處理函數 ---
+    function simClickStep1(idx) {
+      simState.step1Active = idx;
+      const messages = [
+        "✨ <b>第 1 站：</b>每天早上先來「今日補給」換句話、聽純音，幫自己穩定情緒再出發！",
+        "⏰ <b>第 2 站：</b>接著看最一目了然的「簡易週任務」，一眼掌握今天有鬧鐘標示的待辦。",
+        "📊 <b>第 3 站：</b>最後往下看「資料庫追蹤任務」，確認需要持續推進的重點專案。"
+      ];
+      setSimFeedback(messages[idx]);
+      renderSimArea();
+    }
+
+    function simChooseSplit(type) {
+      simState.step2Choice = type;
+      if (type === 'simple') {
+        setSimFeedback("🎉 <b>答對了！</b>像買牛奶、繳費這種不需複雜追蹤的例行小事，直接寫在「簡易週任務」最快最清爽！");
+      } else {
+        setSimFeedback("💡 <b>小提醒：</b>買牛奶不需要建資料庫卡片喔！放進「簡易週任務」用核取方塊打勾會更輕鬆～");
+      }
+      renderSimArea();
+    }
+
+    function simToggleCheck(idx) {
+      simState.step3Checks[idx] = !simState.step3Checks[idx];
+      setSimFeedback(simState.step3Checks[idx]
+        ? "✅ <b>已勾選完成！</b>在 Notion 裡只要按 <code class='bg-white px-1 rounded'>[ ] + 空格鍵</code> 就能隨時建立核取方塊。"
+        : "↩️ 已取消勾選，隨時可以重新調整狀態。");
+      renderSimArea();
+    }
+
+    function simAddTodo() {
+      simState.step3ExtraCount = 1;
+      setSimFeedback("✨ <b>已模擬新增！</b>在 Notion 已設好的清單裡，只要直接按 <b>Enter 換行</b> 就會自動長出下一個核取方塊！");
+      renderSimArea();
+    }
+
+    function simToggleAccordion(key) {
+      simState.step3Toggles[key] = !simState.step3Toggles[key];
+      setSimFeedback("🔽 <b>折疊列表切換成功！</b>使用 <code class='bg-white px-1 rounded'>> + 空格鍵</code> 把長清單收合，整個週任務版面就會保持乾淨美觀！");
+      renderSimArea();
+    }
+
+    function simArchiveWeek() {
+      simState.step4Archived = true;
+      simState.step4NewWeekCreated = false;
+      setSimFeedback("📦 <b>已放入「封存任務」！</b>以後需要確認某件事做過沒，隨時能進去反推星期幾、幾月幾號做的。");
+      renderSimArea();
+    }
+
+    function simNewWeek() {
+      simState.step4NewWeekCreated = true;
+      setSimFeedback("🆕 <b>新一週任務已開啟！</b>一鍵生成乾淨的新週期模板，直接開始規劃下週事項。");
+      renderSimArea();
+    }
+
+    function simAddTempTask() {
+      const samples = ["整理年度閱讀書單", "研究新自動化工具", "規劃下季旅遊景點"];
+      const pick = samples[simState.step5TempTasks.length % samples.length];
+      simState.step5TempTasks.push(pick);
+      setSimFeedback(`💡 已新增無截止日靈感「<b>${pick}</b>」到暫存區！有空檔時點擊該卡片就能排進日曆。`);
+      renderSimArea();
+    }
+
+    function simAddTodayDbTask() {
+      simState.step5CalendarTasks.unshift("今日新增追蹤任務（已自動壓上今天日期）");
+      setSimFeedback("🎯 已透過「<b>有新任務！</b>」按鈕直接建置並排入今天的日曆檢視中！");
+      renderSimArea();
+    }
+
+    function simMoveToCalendar(idx) {
+      const moved = simState.step5TempTasks.splice(idx, 1)[0];
+      simState.step5CalendarTasks.push(`${moved}（已排入空閒日曆）`);
+      setSimFeedback(`📅 已將「<b>${moved}</b>」從暫存區拉進日曆檢視！空閒時段就能輕鬆推進靈感任務。`);
+      renderSimArea();
+    }
+
+    // --- 渲染關卡主控制器 ---
+    function renderGuideStep() {
+      const step = guideSteps[currentStepIndex];
+      const pillsContainer = document.getElementById('step-pills');
+      const card = document.getElementById('guide-card');
+
+      pillsContainer.innerHTML = guideSteps.map((item, idx) => {
+        const isActive = idx === currentStepIndex;
+        const activeClass = isActive
+          ? 'bg-[#6B8E78] text-white shadow-sm'
+          : 'bg-[#F0EDE6] text-[#7D776C] hover:bg-[#E5E0D8]';
+        return `<button onclick="goToStep(${idx})" class="px-3.5 py-1.5 rounded-full text-xs md:text-sm font-semibold transition-all ${activeClass}">${item.pill}</button>`;
+      }).join('');
+
+      document.getElementById('step-counter').textContent = `關卡 ${currentStepIndex + 1} / ${guideSteps.length}`;
+
+      card.classList.add('fade-out');
+      setTimeout(() => {
+        document.getElementById('guide-badge').textContent = step.badge;
+        document.getElementById('guide-title').textContent = step.title;
+        document.getElementById('guide-desc').textContent = step.desc;
+        document.getElementById('guide-hint-box').innerHTML = step.hint;
+
+        document.getElementById('btn-prev-step').disabled = currentStepIndex === 0;
+        const nextBtn = document.getElementById('btn-next-step');
+        nextBtn.textContent = currentStepIndex === guideSteps.length - 1 ? '↺ 從頭體驗' : '下一步 →';
+
+        setSimFeedback("點擊右方模擬區內的按鈕，親自試試看操作效果！");
+        renderSimArea();
+        card.classList.remove('fade-out');
+      }, 150);
+    }
+
+    function goToStep(index) {
+      currentStepIndex = index;
+      renderGuideStep();
+    }
+
+    function changeStep(delta) {
+      if (delta === 1 && currentStepIndex === guideSteps.length - 1) {
+        currentStepIndex = 0;
+      } else {
+        currentStepIndex = Math.max(0, Math.min(guideSteps.length - 1, currentStepIndex + delta));
+      }
+      renderGuideStep();
+    }
+
+    // ==========================================
+    // 3. 金句庫與切換邏輯
+    // ==========================================
     const quotesData = {
       inspire: [
         "今天的你，不需要一下子走完所有路，只要先踏出第一步就夠棒了。",
@@ -223,13 +771,16 @@
         } while (newIndex === lastQuoteIndex && list.length > 1);
       }
       lastQuoteIndex = newIndex;
-      textEl.classList.add('quote-fade-out');
+      textEl.classList.add('fade-out');
       setTimeout(() => {
         textEl.textContent = list[newIndex];
-        textEl.classList.remove('quote-fade-out');
+        textEl.classList.remove('fade-out');
       }, 150);
     }
 
+    // ==========================================
+    // 4. 柔和冥想純音引擎
+    // ==========================================
     let audioCtx = null;
     let isPlaying = false;
     let currentSound = 'bowl';
@@ -258,12 +809,10 @@
       activeNodes = [];
     }
 
-    // 重新調校：非常柔和溫潤的頌缽和弦（溫暖和諧音頻，完全不刺耳）
     function triggerBowlStrike() {
       if (!audioCtx || !isPlaying) return;
       const now = audioCtx.currentTime;
-      // 使用更和諧、低沈溫暖的頻率 (C大調舒緩和弦)
-      const freqs = [196.00, 293.66, 392.00]; 
+      const freqs = [196.00, 293.66, 392.00];
       freqs.forEach((f, idx) => {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -272,7 +821,6 @@
 
         const peak = idx === 0 ? 0.18 : (idx === 1 ? 0.08 : 0.03);
         gain.gain.setValueAtTime(0.0001, now);
-        // 拉長漸強與漸弱時間，讓聲音像遠處的溫柔鐘鳴
         gain.gain.exponentialRampToValueAtTime(peak, now + 0.4);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + 7.0);
 
@@ -291,7 +839,6 @@
         triggerBowlStrike();
         bowlInterval = setInterval(triggerBowlStrike, 7500);
       } else {
-        // 微風與森林白噪：大幅降低高頻，過濾成極度溫柔深沈的自然風聲
         const bufferSize = 2 * audioCtx.sampleRate;
         const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const output = noiseBuffer.getChannelData(0);
@@ -307,7 +854,6 @@
         whiteNoise.loop = true;
         const filter = audioCtx.createBiquadFilter();
         filter.type = 'lowpass';
-        // 微風更低沈 (180Hz)，森林稍微豐富一點 (350Hz)
         filter.frequency.value = type === 'breeze' ? 180 : 350;
         const envGain = audioCtx.createGain();
         envGain.gain.value = type === 'breeze' ? 0.4 : 0.25;
